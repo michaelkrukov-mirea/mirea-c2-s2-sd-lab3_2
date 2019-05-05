@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
+import com.kryukov.lab3_2.database.DatabaseHelper;
 import com.kryukov.lab3_2.database.HelperFactory;
 import com.kryukov.lab3_2.database.dao.StudentDAO;
 
@@ -18,6 +19,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        DatabaseHelper.updateDatabaseVersion(getApplicationContext());
 
         HelperFactory.setHelper(getApplicationContext());
 

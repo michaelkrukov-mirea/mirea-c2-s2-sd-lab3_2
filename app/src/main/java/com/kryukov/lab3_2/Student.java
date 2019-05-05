@@ -59,4 +59,18 @@ public class Student {
     public void setAdded(Date added) {
         this.added = added;
     }
+
+
+    @DatabaseTable(tableName = "students")
+    public static class StudentV1 {
+        @DatabaseField(generatedId = true)
+        private int id;
+
+        @DatabaseField(canBeNull = false)
+        private String fullname;
+
+        @DatabaseField(canBeNull = false)
+        private Date added;
+    }
+
 }

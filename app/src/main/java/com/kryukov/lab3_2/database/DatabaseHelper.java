@@ -1,6 +1,7 @@
 package com.kryukov.lab3_2.database;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
@@ -21,7 +22,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 
     private static final String DATABASE_NAME ="lab3_2.db";
 
-    private static final int DATABASE_VERSION = 2;
+    private static int DATABASE_VERSION = 1;
 
     private StudentDAO StudentDAO;
 
@@ -29,11 +30,24 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
+    public static void updateDatabaseVersion(Context context) {
+        SharedPreferences sharedPref = context.getSharedPreferences("db", Context.MODE_PRIVATE);
+        DATABASE_VERSION = sharedPref.getInt("v", 1);
+
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putInt("v", 1 + DATABASE_VERSION % 2);
+        editor.commit();
+    }
+
     @Override
     public void onCreate(SQLiteDatabase db, ConnectionSource connectionSource){
         try
         {
-            TableUtils.createTable(connectionSource, Student.class);
+            if (DATABASE_VERSION == 1) {
+                TableUtils.createTable(connectionSource, Student.StudentV1.class);
+            } else {
+                TableUtils.createTable(connectionSource, Student.class);
+            }
         }
         catch (SQLException e){
             Log.e(TAG, "error creating DB " + DATABASE_NAME);
@@ -42,14 +56,18 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
     }
 
     @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        db.execSQL("DROP TABLE students");
+        onCreate(db);
+    }
+
+    @Override
     public void onUpgrade(SQLiteDatabase db, ConnectionSource connectionSource, int oldVer,
                           int newVer){
-
         db.beginTransaction();
 
         try{
             if (oldVer == 1) {
-                db.execSQL("BEGIN TRANSACTION");
                 db.execSQL("CREATE TEMPORARY TABLE students_backup(id, fullname, added)");
                 db.execSQL("INSERT INTO students_backup SELECT id, fullname, added FROM students");
                 db.execSQL("DROP TABLE students");
